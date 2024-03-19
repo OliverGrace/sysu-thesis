@@ -18,7 +18,7 @@
     fontset=fandol,    % texlive自带，可移植字体库，只有常用的6763个汉字
     %fontset=ubuntu,
     %fontset=mac,
-    %fontset=windows,
+    %fontset=windows, % 在windows系统下使用这一行的命令以显示生僻字
     a4paper,
     %openright,
     openany,
@@ -29,7 +29,11 @@
 
 % 配置英文字体
 \RequirePackage{fontspec}
-\setmainfont{Times New Roman}
+% 如果\RequirePackage{newtxtext}能正常通过编译请注释以下三行，并取消第四行的注释
+\renewcommand*{\rmdefault}{ntxtlf} % always TLF for math
+\renewcommand*{\familydefault}{\rmdefault}
+\setmainfont{Times New Roman} % 如果注释掉能正常编译，请注释
+%\RequirePackage{newtxtext} % 文本自动采用新罗马字体
 
 % \RequirePackage[margin=1in,headsep=.2in, headheight=2in]{geometry}
 \RequirePackage[top=25mm, bottom=20mm, left=30mm, right=30mm,a4paper]{geometry}
@@ -40,6 +44,7 @@
 \RequirePackage[labelsep=space]{caption}
 \RequirePackage[font=footnotesize]{subcaption}
 \RequirePackage{amsmath,amssymb,amsthm}
+\RequirePackage{newtxmath,bm} % 公式使用新罗马字体
 \RequirePackage{ragged2e} % 实现两端对齐
 \RequirePackage{listings}
 \RequirePackage{longtable}
@@ -64,6 +69,12 @@
 
 % 引入调整段落整体宽度的宏包
 \RequirePackage{changepage}
+
+% 作图宏包
+\RequirePackage{pgfplots}
+
+% Fix <https://github.com/SYSU-SCC/sysu-thesis/issues/71>
+\RequirePackage{notoccite}
 
 % 设定时间为中文日期
 \ctexset{today=small}
@@ -101,8 +112,8 @@
 \renewcommand{\headrulewidth}{1pt}
 \renewcommand{\footrulewidth}{0pt}
 \renewcommand{\chaptermark}[1]{ \markboth{#1}{} }
-% 采用带圈数字符号代替*号脚注
-\xeCJKsetcharclass{`①}{`⑩}{1}
+% 采用带圈数字1-20符号代替*号脚注
+\xeCJKsetcharclass{"2460}{"2473}{1}
 % 默认页面页眉页脚样式
 \fancypagestyle{plain}{
     \fancyhf{}
@@ -467,8 +478,8 @@
     \begin{longtable}{|p{\textwidth}|}
         % 第一页出现的表头
         \hline
-        论文(设计)题目:                                                                                                             \\
-        Thesis (Design) Title: \@ctitle
+        论文(设计)题目: \@ctitle                                                                                                            \\
+        Thesis (Design) Title: \@etitle
         \endfirsthead
 
         % 中间页出现的表头
@@ -963,6 +974,7 @@
     }
 
     % 引用样式
+    \setlength{\bibsep}{0em}
     \bibliographystyle{gbt7714-numerical}
     % F15 参考文献内容 宋体五号
     {\zihao{5}\rmfamily\songti\bibliography{main}}    % 引用文献列表
@@ -1102,10 +1114,12 @@
 % 暂时不能处理引理，推论
 
 
-\renewcommand{\@fnsymbol}[1]{
-    \ifcase#1\or \text{①}\or \text{②}\or \text{③}\or    \text{④}\or \text{⑤}\or \text{⑥}\or \text{⑦}\or \text{⑧} \or \text{⑨} \or \text{⑩}
-    \else
-        \@ctrerr
-    \fi
+% 脚注标号拓展为1-20，超出标号会出现错误
+\newcommand\sysu@textcircled[1]{%
+  \ifnum\value{#1}<21\relax
+    {\symbol{\numexpr\value{#1} + "245F\relax}}%
+  \else
+    \@ctrerr % Cannot display more than 20 footnotes
+  \fi
 }
-\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\renewcommand{\thefootnote}{\sysu@textcircled{footnote}}
